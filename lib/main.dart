@@ -16,76 +16,10 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home:// MyHomePage(title: 'EBiCS Control Center'),
-        Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
-              child: PageViewDemo(),
-            ),
-        ),
+        home: MyHomePage(title: 'EBiCS Control Center'),
+
       );
 }
-
-
-
-class PageViewDemo extends StatefulWidget {
-        @override
-        _PageViewDemoState createState() => _PageViewDemoState();
-        }
-
-class _PageViewDemoState extends State<PageViewDemo> {
-
-        PageController _controller = PageController(
-        initialPage: 0,
-        );
-
-        @override
-        void dispose() {
-        _controller.dispose();
-        super.dispose();
-        }
-
-        @override
-        Widget build(BuildContext context) {
-          return PageView(
-            controller: _controller,
-            children: [
-
-              MyHomePage(title: 'EBiCS Control Center'),
-              //MyPage1Widget(),
-        ],
-        );
-        }
-}
-
-class MyPage1Widget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Row(
-          children: [
-            MyBox(darkGreen, height: 50),
-          ],
-        ),
-        Row(
-          children: [
-            MyBox(lightGreen),
-            MyBox(lightGreen),
-          ],
-        ),
-        MyGauge(10.0),
-        Row(
-          children: [
-            MyBox(lightGreen, height: 200),
-            MyBox(lightGreen, height: 200),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -110,8 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice targetDevice;
   BluetoothCharacteristic EBiCS_characteristic;
   List<BluetoothService> _services;
-  static int Speed_value = 30;
-  static int viewNumber = 0;
+  static int Speed_value = 1;
+  static int viewNumber = 2;
 
   _addDeviceTolist(final BluetoothDevice device) {
     if (!widget.devicesList.contains(device)) {
@@ -133,8 +67,8 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     widget.flutterBlue.scanResults.listen((List<ScanResult> results) {
       for (ScanResult result in results) {
+        _addDeviceTolist(result.device);
         if (result.device.name == TARGET_DEVICE_NAME) {
-          _addDeviceTolist(result.device);
           targetDevice = result.device;
           connectToDevice();
            }
@@ -466,6 +400,21 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void handleClick(String value) {
+    switch (value) {
+      case 'Main View':
+        setState(() {
+          viewNumber = 1;
+        });
+        break;
+      case 'Connect Device':
+        setState(() {
+          viewNumber = 0;
+        });
+        break;
+    }
+  }
+
   ListView _ThirdView() {
     List<Container> containers = new List<Container>();
 
@@ -514,7 +463,32 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
   }
-  
+
+  ListView _WelcomeScreen () {
+
+    List<Container> containers = new List<Container>();
+    containers.add(
+      Container(
+
+        child: Row(
+            children: <Widget>[
+
+              MyBox(mediumBlue, height: 200, text: "Welcome! \r\nWaiting for connection..."),
+
+        ],
+      )
+      )
+    );
+    return ListView(
+      padding: const EdgeInsets.all(2),
+      children: <Widget>[
+        ...containers,
+      ],
+    );
+
+  }
+
+
   ListView _buildView() {
     /*if (_connectedDevice != null) {
       return _buildConnectDeviceView();
@@ -532,7 +506,7 @@ class _MyHomePageState extends State<MyHomePage> {
       break;
 
       case 2: {
-        return _ThirdView();
+        return _WelcomeScreen();
       }
       break;
     }
@@ -544,10 +518,25 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title,
             textAlign: TextAlign.center,
           ),
+          actions: <Widget>[
+            PopupMenuButton<String>(
+              onSelected: handleClick,
+              itemBuilder: (BuildContext context) {
+                return {'Main View', 'Connect Device'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            ),
+          ],
         ),
         body: _buildView(),
       );
 }
+
+
 
 showAlertDialog(BuildContext context) {
   // set up the button
@@ -604,7 +593,7 @@ class MyBox extends StatelessWidget {
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 50,
+              fontSize: 18,
               color: Colors.white,
             ),
           ),
@@ -626,52 +615,52 @@ final double zeigerwert;
   Widget build(BuildContext context) {
     return _getMarkerPointerExample(zeigerwert);
   }
+// Returns the marker pointer gauge
+SfRadialGauge _getMarkerPointerExample(double paramvalue) {
+  return SfRadialGauge(
+    enableLoadingAnimation: true,
+    axes: <RadialAxis>[
+      RadialAxis(
+          interval: 5,
+          maximum: 60,
+          axisLineStyle: AxisLineStyle(
+            thickness: 0.05,
+            thicknessUnit: GaugeSizeUnit.factor,
+          ),
+          showTicks: true,
+          axisLabelStyle: GaugeTextStyle(
+            fontSize: 18,
+          ),
+          labelOffset: 25,
+          radiusFactor: 0.95,
+          pointers: <GaugePointer>[
+            NeedlePointer(
+                needleLength: 0.7,
+                value: paramvalue,
+                lengthUnit: GaugeSizeUnit.factor,
+                needleColor: _needleColor,
+                needleStartWidth: 0,
+                needleEndWidth: 4,
+                knobStyle: KnobStyle(
+                    sizeUnit: GaugeSizeUnit.factor,
+                    color: _needleColor,
+                    knobRadius: 0.05)),
+          ],
+          annotations: <GaugeAnnotation>[
+            GaugeAnnotation(
+                angle: 270,
+                positionFactor: 0.5,
+                widget: Container(
+                    child: Text('km/h',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)))),
 
-  /// Returns the marker pointer gauge
-  SfRadialGauge _getMarkerPointerExample(double paramvalue) {
-    return SfRadialGauge(
-      enableLoadingAnimation: true,
-      axes: <RadialAxis>[
-        RadialAxis(
-            interval: 10,
-            axisLineStyle: AxisLineStyle(
-              thickness: 0.03,
-              thicknessUnit: GaugeSizeUnit.factor,
-            ),
-            showTicks: false,
-            axisLabelStyle: GaugeTextStyle(
-              fontSize: 14,
-            ),
-            labelOffset: 25,
-            radiusFactor: 0.95,
-            pointers: <GaugePointer>[
-              NeedlePointer(
-                  needleLength: 0.7,
-                  value: paramvalue,
-                  lengthUnit: GaugeSizeUnit.factor,
-                  needleColor: _needleColor,
-                  needleStartWidth: 0,
-                  needleEndWidth: 4,
-                  knobStyle: KnobStyle(
-                      sizeUnit: GaugeSizeUnit.factor,
-                      color: _needleColor,
-                      knobRadius: 0.05)),
-            ],
-            annotations: <GaugeAnnotation>[
-              GaugeAnnotation(
-                  angle: 270,
-                  positionFactor: 0.5,
-                  widget: Container(
-                      child: Text('km/h',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)))),
-
-            ]
-        )
-           ],
-    );
-  }
+          ]
+      )
+    ],
+  );
+}
 
 final Color _needleColor = const Color(0xFFC06C84);
 

@@ -1,3 +1,3 @@
-# Flutter BLE demo
+EBiCS-Flutter
 
-This is a usage example of flutter_blue by writing an nRF connect like app.
+App for the EBiCS controller
