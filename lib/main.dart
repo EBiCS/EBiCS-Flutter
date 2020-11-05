@@ -12,13 +12,13 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'EBiCS',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: MyHomePage(title: 'EBiCS Control Center'),
+    title: 'EBiCS',
+    theme: ThemeData(
+      primarySwatch: Colors.lightBlue,
+    ),
+    home: MyHomePage(title: 'EBiCS Control Center'),
 
-      );
+  );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -45,12 +45,20 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothCharacteristic EBiCS_characteristic;
   List<BluetoothService> _services;
   static int Speed_value = 1;
+  static int Trip_value = 0;
+  static int Voltage_value = 0;
+  static int Power_value = 0;
+  static int Assist_Level = 3;
+  static int Regen_Level = 4;
   static int viewNumber = 2;
+  BluetoothService UART_service;
+  BluetoothCharacteristic UART_characteristic;
+
 
   _addDeviceTolist(final BluetoothDevice device) {
     if (!widget.devicesList.contains(device)) {
       setState(() {
-          widget.devicesList.add(device);
+        widget.devicesList.add(device);
       });
     }
   }
@@ -71,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (result.device.name == TARGET_DEVICE_NAME) {
           targetDevice = result.device;
           connectToDevice();
-           }
+        }
       }
     });
     widget.flutterBlue.startScan();
@@ -99,23 +107,29 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   activateNotify() async {
+     for (BluetoothService service in _services) {
 
-    for (BluetoothService service in _services) {
       if (service.uuid.toString() == SERVICE_UUID) {
+        UART_service = service;
         for (BluetoothCharacteristic characteristic in service.characteristics) {
-        await characteristic.setNotifyValue(true);
-        characteristic.value.listen((value) {
-          print('aktualisierte Nachricht!:' + value.toString());
-          setState(() {
-            widget.readValues[characteristic.uuid] = value;
-            Speed_value = value[0];
-
-          });
-
-        });
-      }
+          if (characteristic.uuid.toString() == CHARACTERISTIC_UUID) {
+            UART_characteristic = characteristic;
+            await characteristic.setNotifyValue(true);
+            characteristic.value.listen((value) {
+              //print('aktualisierte Nachricht!:' + value.toString());
+              setState(() {
+                widget.readValues[characteristic.uuid] = value;
+                Speed_value = value[0];
+                Trip_value = value[1];
+                Voltage_value = value[2];
+                Power_value = value[3];
+              });
+            });
+          }
+        }
       }
     }
+
   }
   ListView _buildListViewOfDevices() {
     List<Container> containers = new List<Container>();
@@ -124,41 +138,41 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                children: <Widget>[
-                  Text(device.name == '' ? '(unknown device)' : device.name
-                  ),
-                  Text(device.id.toString()
-                  ),
-                ],
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  children: <Widget>[
+                    Text(device.name == '' ? '(unknown device)' : device.name
+                    ),
+                    Text(device.id.toString()
+                    ),
+                  ],
+                ),
               ),
-            ),
-            FlatButton(
-              color: Colors.blue,
-              child: Text(
-                'Connect',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () async {
-                widget.flutterBlue.stopScan();
-                try {
-                  await device.connect();
-                } catch (e) {
-                  if (e.code != 'already_connected') {
-                    throw e;
+              FlatButton(
+                color: Colors.blue,
+                child: Text(
+                  'Connect',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onPressed: () async {
+                  widget.flutterBlue.stopScan();
+                  try {
+                    await device.connect();
+                  } catch (e) {
+                    if (e.code != 'already_connected') {
+                      throw e;
+                    }
+                  } finally {
+                    _services = await device.discoverServices();
                   }
-                } finally {
-                  _services = await device.discoverServices();
-                }
-                setState(() {
-                  _connectedDevice = device;
-                });
-              },
-            ),
-          ],
-        ),
+                  setState(() {
+                    _connectedDevice = device;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -166,8 +180,8 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           child: Row(
-              children: <Widget>[
-                FlatButton(
+            children: <Widget>[
+              FlatButton(
                   color: Colors.blue,
                   child: Text(
                     'Detail View',
@@ -180,9 +194,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
 
                   }
-                  ),
+              ),
 
-              ],
+            ],
           ),
         ));
 
@@ -285,7 +299,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 });*/
                 await characteristic.setNotifyValue(true);
                 characteristic.value.listen((value) {
-                  print('aktualisierte Nachricht!:' + value.toString());
+                  //print('aktualisierte Nachricht!:' + value.toString());
                   setState(() {
                     widget.readValues[characteristic.uuid] = value;
                   });
@@ -306,94 +320,206 @@ class _MyHomePageState extends State<MyHomePage> {
     List<Container> containers = new List<Container>();
 
     for (BluetoothService service in _services) {
-      if (service.uuid.toString() == SERVICE_UUID) {
-      List<Widget> characteristicsWidget = new List<Widget>();
-      print('service uuid!:' + service.uuid.toString());
-      //showAlertDialog(context);
-      for (BluetoothCharacteristic characteristic in service.characteristics) {
+       if (service.uuid.toString() == SERVICE_UUID) {
+        List<Widget> characteristicsWidget = new List<Widget>();
+        //showAlertDialog(context);
+        for (BluetoothCharacteristic characteristic in service.characteristics) {
           characteristicsWidget.add(
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Text(characteristic.uuid.toString()
-                        ,
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                Row(
-                  children: <Widget>[
-                    ..._buildReadWriteNotifyButton(characteristic),
-                  ],
-                ),
-                Row(
-                  children: <Widget>[
-                    Text('aktueller Wert: ' + widget.readValues[characteristic.uuid].toString()
-                    ),
-                  ],
-                ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                children: <Widget>[
 
-                Divider(),
 
-              ],
+                  Row(
+                    children: <Widget>[
+                      Text('Bytes received:' + widget.readValues[characteristic.uuid].toString()
+                      ),
+                    ],
+                  ),
+
+                  Divider(),
+
+                ],
+              ),
             ),
-          ),
-        );
-      }
-      containers.add(
-        Container(
-          child: characteristicsWidget[0],
-        ),
+          );
+        }
 
-      );
+
+
+      }
 
     }
-  }
-    containers.add(
-        Container(
-          height: 50,
-          child: Row(
-            children: <Widget>[
-              FlatButton(
-                  color: Colors.blue,
-                  child: Text(
-                    'Device View',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    print('Button 1 pressed!');
-                    setState(() {
-                      viewNumber = 0;
-                    });
 
-                  }
-              ),
-              FlatButton(
-                  color: Colors.blue,
-                  child: Text(
-                    'View 3',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    print('Button 2 pressed!');
-                    setState(() {
-                      viewNumber = 2;
-                    });
-
-                  }
-              ),
-            ],
-          ),
-        ));
     containers.add(
         Container(
           height: 300,
           child: MyGauge(Speed_value.toDouble())
-          ,        ));
+          ,
+        ));
+
+
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                MyBox(Colors.white, height: 22, text: "Trip"),
+                MyBox(Colors.white, height: 22, text: "Voltage"),
+                MyBox(Colors.white, height: 22, text: "Power"),
+              ],
+            )
+
+        )
+    );
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Trip_value.toString() + " km"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Voltage_value.toString() + " V"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Power_value.toString() + " W"),
+              ],
+            )
+
+        )
+    );
+
+
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                MyBox(Colors.white, height: 22, text: ""),
+                MyBox(Colors.white, height: 22, text: "Regen Level"),
+                MyBox(Colors.white, height: 22, text: ""),
+              ],
+            )
+
+        )
+    );
+
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: () {
+                    if (Regen_Level>0) {
+                      setState(() {
+                        Regen_Level--;
+                        UART_characteristic.write(
+                            utf8.encode(Regen_Level.toString()));
+                      });
+                    }
+                    },
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  color: darkBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      //Text("Label", style: TextStyle(color: Colors.white)),
+                      SizedBox(height: 70),
+                      Icon(Icons.arrow_circle_down_rounded, color: Colors.white),
+                    ],
+                  ),
+                ),
+                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: Regen_Level.toString()),
+                RaisedButton(
+                  onPressed: () {
+                    if (Regen_Level<7) {
+                      setState(() {
+                        Regen_Level++;
+                      });
+                    }
+                    },
+                  padding: const EdgeInsets.symmetric(horizontal:12),
+                  color: darkBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      //Text("Label", style: TextStyle(color: Colors.white)),
+                      SizedBox(height: 70),
+                      Icon(Icons.arrow_circle_up_rounded, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ],
+            )
+        )
+    );
+
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                MyBox(Colors.white, height: 22, text: ""),
+                MyBox(Colors.white, height: 22, text: "Assist Level"),
+                MyBox(Colors.white, height: 22, text: ""),
+              ],
+            )
+
+        )
+    );
+
+    containers.add(
+        Container(
+            child: Row(
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: () {
+                    if (Assist_Level>0) {
+                      setState(() {
+                        Assist_Level--;
+                      });
+                    }
+                    },
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  color: darkBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      //Text("Label", style: TextStyle(color: Colors.white)),
+                      SizedBox(height: 70),
+                      Icon(Icons.arrow_circle_down_rounded, color: Colors.white),
+                    ],
+                  ),
+                ),
+                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: Assist_Level.toString()),
+                RaisedButton(
+                  onPressed: () {
+                    if (Assist_Level<7) {
+                      setState(() {
+                        Assist_Level++;
+                      });
+                    }
+                    },
+                  padding: const EdgeInsets.symmetric(horizontal:12),
+                  color: darkBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      //Text("Label", style: TextStyle(color: Colors.white)),
+                      SizedBox(height: 70),
+                      Icon(Icons.arrow_circle_up_rounded, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ],
+            )
+        )
+    );
+
     return ListView(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(4),
       children: <Widget>[
         ...containers,
       ],
@@ -415,69 +541,20 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  ListView _ThirdView() {
-    List<Container> containers = new List<Container>();
-
-
-    containers.add(
-        Container(
-          height: 50,
-          child: Row(
-            children: <Widget>[
-              FlatButton(
-                  color: Colors.blue,
-                  child: Text(
-                    'Device View',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    print('Button 1 pressed!');
-                    setState(() {
-                      viewNumber = 0;
-                    });
-
-                  }
-              ),
-              FlatButton(
-                  color: Colors.blue,
-                  child: Text(
-                    'Detail View',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    print('Button 2 pressed!');
-                    setState(() {
-                      viewNumber = 1;
-                    });
-
-                  }
-              ),
-            ],
-          ),
-        ));
-
-    return ListView(
-      padding: const EdgeInsets.all(8),
-      children: <Widget>[
-        ...containers,
-      ],
-    );
-  }
-
   ListView _WelcomeScreen () {
 
     List<Container> containers = new List<Container>();
     containers.add(
-      Container(
+        Container(
 
-        child: Row(
-            children: <Widget>[
+            child: Row(
+              children: <Widget>[
 
-              MyBox(mediumBlue, height: 200, text: "Welcome! \r\nWaiting for connection..."),
+                MyBox(mediumBlue, height: 200, text: "Welcome! \r\nWaiting for connection..."),
 
-        ],
-      )
-      )
+              ],
+            )
+        )
     );
     return ListView(
       padding: const EdgeInsets.all(2),
@@ -514,26 +591,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title,
-            textAlign: TextAlign.center,
-          ),
-          actions: <Widget>[
-            PopupMenuButton<String>(
-              onSelected: handleClick,
-              itemBuilder: (BuildContext context) {
-                return {'Main View', 'Connect Device'}.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
-            ),
-          ],
+    appBar: AppBar(
+      title: Text(widget.title,
+        textAlign: TextAlign.center,
+      ),
+      actions: <Widget>[
+        PopupMenuButton<String>(
+          onSelected: handleClick,
+          itemBuilder: (BuildContext context) {
+            return {'Main View', 'Connect Device'}.map((String choice) {
+              return PopupMenuItem<String>(
+                value: choice,
+                child: Text(choice),
+              );
+            }).toList();
+          },
         ),
-        body: _buildView(),
-      );
+      ],
+    ),
+    body: _buildView(),
+  );
 }
 
 
@@ -576,26 +653,30 @@ final darkRed = Colors.red.shade900;
 class MyBox extends StatelessWidget {
   final Color color;
   final double height;
+  final Color fontColor;
+  final double fontSize;
   final String text;
 
-  MyBox(this.color, {this.height, this.text});
+  MyBox(this.color, {this.height, this.fontSize, this.fontColor, this.text});
 
   @override
   Widget build(BuildContext context) {
-     return Expanded(
+    return Expanded(
       child: Container(
-        margin: EdgeInsets.all(10),
+        margin: EdgeInsets.all(5),
         color: color,
         height: (height == null) ? 150 : height,
+
         child: (text == null)
             ? null
             : Center(
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
+                fontSize: (fontSize == null) ? 18 : fontSize,
+              color: (fontColor == null) ? Colors.black : fontColor,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -607,7 +688,7 @@ class MyBox extends StatelessWidget {
 
 
 class MyGauge extends StatelessWidget {
-final double zeigerwert;
+  final double zeigerwert;
 
   MyGauge(this.zeigerwert);
 
@@ -616,52 +697,52 @@ final double zeigerwert;
     return _getMarkerPointerExample(zeigerwert);
   }
 // Returns the marker pointer gauge
-SfRadialGauge _getMarkerPointerExample(double paramvalue) {
-  return SfRadialGauge(
-    enableLoadingAnimation: true,
-    axes: <RadialAxis>[
-      RadialAxis(
-          interval: 5,
-          maximum: 60,
-          axisLineStyle: AxisLineStyle(
-            thickness: 0.05,
-            thicknessUnit: GaugeSizeUnit.factor,
-          ),
-          showTicks: true,
-          axisLabelStyle: GaugeTextStyle(
-            fontSize: 18,
-          ),
-          labelOffset: 25,
-          radiusFactor: 0.95,
-          pointers: <GaugePointer>[
-            NeedlePointer(
-                needleLength: 0.7,
-                value: paramvalue,
-                lengthUnit: GaugeSizeUnit.factor,
-                needleColor: _needleColor,
-                needleStartWidth: 0,
-                needleEndWidth: 4,
-                knobStyle: KnobStyle(
-                    sizeUnit: GaugeSizeUnit.factor,
-                    color: _needleColor,
-                    knobRadius: 0.05)),
-          ],
-          annotations: <GaugeAnnotation>[
-            GaugeAnnotation(
-                angle: 270,
-                positionFactor: 0.5,
-                widget: Container(
-                    child: Text('km/h',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)))),
+  SfRadialGauge _getMarkerPointerExample(double paramvalue) {
+    return SfRadialGauge(
+      enableLoadingAnimation: true,
+      axes: <RadialAxis>[
+        RadialAxis(
+            interval: 5,
+            maximum: 60,
+            axisLineStyle: AxisLineStyle(
+              thickness: 0.05,
+              thicknessUnit: GaugeSizeUnit.factor,
+            ),
+            showTicks: true,
+            axisLabelStyle: GaugeTextStyle(
+              fontSize: 18,
+            ),
+            labelOffset: 25,
+            radiusFactor: 0.95,
+            pointers: <GaugePointer>[
+              NeedlePointer(
+                  needleLength: 0.7,
+                  value: paramvalue,
+                  lengthUnit: GaugeSizeUnit.factor,
+                  needleColor: _needleColor,
+                  needleStartWidth: 0,
+                  needleEndWidth: 4,
+                  knobStyle: KnobStyle(
+                      sizeUnit: GaugeSizeUnit.factor,
+                      color: _needleColor,
+                      knobRadius: 0.05)),
+            ],
+            annotations: <GaugeAnnotation>[
+              GaugeAnnotation(
+                  angle: 270,
+                  positionFactor: 0.5,
+                  widget: Container(
+                      child: Text('km/h',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold)))),
 
-          ]
-      )
-    ],
-  );
-}
+            ]
+        )
+      ],
+    );
+  }
 
-final Color _needleColor = const Color(0xFFC06C84);
+  final Color _needleColor = const Color(0xFFC06C84);
 
 }
