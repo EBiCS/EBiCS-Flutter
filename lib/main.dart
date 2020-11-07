@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     theme: ThemeData(
       primarySwatch: Colors.lightBlue,
     ),
-    home: MyHomePage(title: 'EBiCS Control Center'),
+    home: MyHomePage(title: 'Control Center'),
 
   );
 }
@@ -38,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final String SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb";
   final String CHARACTERISTIC_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
   final String TARGET_DEVICE_NAME = "EBiCS";
+
   //BluetoothDevice targetDevice;
   //BluetoothCharacteristic targetCharacteristic;
   BluetoothDevice _connectedDevice;
@@ -51,6 +52,10 @@ class _MyHomePageState extends State<MyHomePage> {
   static int Assist_Level = 3;
   static int Regen_Level = 4;
   static int viewNumber = 2;
+  static Color BT_color = Colors.grey;
+  static Color OnOff_color = Colors.grey;
+  static bool OnOff = false;
+
   BluetoothService UART_service;
   BluetoothCharacteristic UART_characteristic;
 
@@ -101,6 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _connectedDevice = targetDevice;
       viewNumber = 1;
+      BT_color = Colors.green[900];
     });
     print('DEVICE CONNECTED');
 
@@ -432,6 +438,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     if (Regen_Level<7) {
                       setState(() {
                         Regen_Level++;
+                        UART_characteristic.write(
+                            utf8.encode(Regen_Level.toString()));
                       });
                     }
                     },
@@ -475,6 +483,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     if (Assist_Level>0) {
                       setState(() {
                         Assist_Level--;
+                        UART_characteristic.write(
+                            utf8.encode(Assist_Level.toString()));
                       });
                     }
                     },
@@ -497,6 +507,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     if (Assist_Level<7) {
                       setState(() {
                         Assist_Level++;
+                        UART_characteristic.write(
+                            utf8.encode(Assist_Level.toString()));
                       });
                     }
                     },
@@ -595,7 +607,37 @@ class _MyHomePageState extends State<MyHomePage> {
       title: Text(widget.title,
         textAlign: TextAlign.center,
       ),
+      leading: IconButton(
+        icon: Image.asset('assets/EBiCS_Icon.png'),
+        onPressed: () { },
+      ),
       actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.bluetooth_connected_rounded, color: BT_color),
+          onPressed: () { },
+        ),
+        IconButton(
+          icon: Icon(Icons.radio_button_on, color: OnOff_color),
+          onPressed: () {
+            OnOff = !OnOff; //toggle
+            if (OnOff) {
+              setState(() {
+                 UART_characteristic.write(
+                    utf8.encode('AT'));
+                 OnOff_color= Colors.green[900];
+              });
+            }
+            else {
+              setState(() {
+                UART_characteristic.write(
+                    utf8.encode('AT'));
+                OnOff_color= Colors.grey;
+              });
+            }
+          },
+        ),
+
+
         PopupMenuButton<String>(
           onSelected: handleClick,
           itemBuilder: (BuildContext context) {
