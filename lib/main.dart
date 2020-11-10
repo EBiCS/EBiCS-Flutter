@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
+import 'LEV_Pages.dart';
+
 
 void main() => runApp(MyApp());
 
@@ -58,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   BluetoothService UART_service;
   BluetoothCharacteristic UART_characteristic;
+  controllerState test = new controllerState(0);
 
 
   _addDeviceTolist(final BluetoothDevice device) {
@@ -129,6 +132,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 Trip_value = value[1];
                 Voltage_value = value[2];
                 Power_value = value[3];
+                test.Speed = value[4];;
+                print('Hallo Welt ' + test.Speed.toString());
+                UART_characteristic.write(value);
               });
             });
           }
@@ -623,14 +629,14 @@ class _MyHomePageState extends State<MyHomePage> {
             if (OnOff) {
               setState(() {
                  UART_characteristic.write(
-                    utf8.encode('AT'));
+                    utf8.encode('AT+PIO21'));
                  OnOff_color= Colors.green[900];
               });
             }
             else {
               setState(() {
                 UART_characteristic.write(
-                    utf8.encode('AT'));
+                    utf8.encode('AT+PIO20'));
                 OnOff_color= Colors.grey;
               });
             }
