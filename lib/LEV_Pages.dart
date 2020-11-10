@@ -7,33 +7,33 @@ class controllerState {
  int Travel_Mode_State;
  int System_State;
  int Gear_State;
- int LEV_Error;
- int Speed;
+ int LEV_Error= 0;
+ int Speed= 0;
  int Assist_Level;
  int Regen_Level;
 
  //page 2
- int Odometer;
- int Remaining_range;
+ int Odometer= 0;
+ int Remaining_range= 0;
 
  //page 3
- int Battery_SOC;
- int Percentage_Assist;
+ int Battery_SOC= 0;
+ int Percentage_Assist= 0;
 
  //page 4
- int Charging_Cycle;
- int Fuel_Consuption;
- int Battery_Voltage;
- int Distance_On_Recent_Charge;
+ int Charging_Cycle= 0;
+ int Fuel_Consuption= 0;
+ int Battery_Voltage= 0;
+ int Distance_On_Recent_Charge= 0;
 
  //page 5
- int Travel_Modes_Supported;
- int Wheel_Circumference;
+ int Travel_Modes_Supported= 0;
+ int Wheel_Circumference= 0;
 
  //page 16
 
- int Display_Command;
- int Manufacturer_ID;
+ int Display_Command= 0;
+ int Manufacturer_ID= 0;
 
 
  controllerState(this.LEV_Error);
@@ -41,11 +41,15 @@ class controllerState {
 }
 
 List prepare_Ant_Message (int Page, controllerState State ){
- List <int> message = new List<int>();
+State.Travel_Mode_State = State.Regen_Level|State.Assist_Level<<3;
+ List <int> message = new List<int>(12);
+
  message[0] = 164; //Sync binary 10100100;
  message[1] = 12;  //MsgLength
  message[2] = 0x4E; // MsgID for 0x4E for "broadcast Data"
+
  message[3] = Page;
+
  switch (Page) {
   case 16:
    {
@@ -64,6 +68,7 @@ List prepare_Ant_Message (int Page, controllerState State ){
    }
  }
  message[11]=0;
+
  for (var i = 0; i < 11; i++) {
   message[11] ^= message[i];
  }

@@ -60,7 +60,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   BluetoothService UART_service;
   BluetoothCharacteristic UART_characteristic;
-  controllerState test = new controllerState(0);
+  controllerState CS = new controllerState(0);
+
 
 
   _addDeviceTolist(final BluetoothDevice device) {
@@ -74,6 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    initCS();
     widget.flutterBlue.connectedDevices
         .asStream()
         .listen((List<BluetoothDevice> devices) {
@@ -125,16 +127,15 @@ class _MyHomePageState extends State<MyHomePage> {
             UART_characteristic = characteristic;
             await characteristic.setNotifyValue(true);
             characteristic.value.listen((value) {
-              //print('aktualisierte Nachricht!:' + value.toString());
+
               setState(() {
                 widget.readValues[characteristic.uuid] = value;
                 Speed_value = value[0];
                 Trip_value = value[1];
                 Voltage_value = value[2];
                 Power_value = value[3];
-                test.Speed = value[4];;
-                print('Hallo Welt ' + test.Speed.toString());
-                UART_characteristic.write(value);
+                CS.Speed = value[4];;
+
               });
             });
           }
@@ -417,11 +418,10 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 RaisedButton(
                   onPressed: () {
-                    if (Regen_Level>0) {
+                    if (CS.Regen_Level>0) {
                       setState(() {
-                        Regen_Level--;
-                        UART_characteristic.write(
-                            utf8.encode(Regen_Level.toString()));
+                        CS.Regen_Level--;
+                        UART_characteristic.write(prepare_Ant_Message(16,CS));
                       });
                     }
                     },
@@ -438,14 +438,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 ),
-                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: Regen_Level.toString()),
+                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: CS.Regen_Level.toString()),
                 RaisedButton(
                   onPressed: () {
-                    if (Regen_Level<7) {
+                    if (CS.Regen_Level<7) {
                       setState(() {
-                        Regen_Level++;
-                        UART_characteristic.write(
-                            utf8.encode(Regen_Level.toString()));
+                        CS.Regen_Level++;
+                        print('Button Level Up');
+                        UART_characteristic.write(prepare_Ant_Message(16,CS));
                       });
                     }
                     },
@@ -486,11 +486,10 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 RaisedButton(
                   onPressed: () {
-                    if (Assist_Level>0) {
+                    if (CS.Assist_Level>0) {
                       setState(() {
-                        Assist_Level--;
-                        UART_characteristic.write(
-                            utf8.encode(Assist_Level.toString()));
+                        CS.Assist_Level--;
+                        UART_characteristic.write(prepare_Ant_Message(16,CS));
                       });
                     }
                     },
@@ -507,14 +506,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 ),
-                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: Assist_Level.toString()),
+                MyBox(mediumBlue, height: 70, fontSize: 48, fontColor: Colors.white, text: CS.Assist_Level.toString()),
                 RaisedButton(
                   onPressed: () {
-                    if (Assist_Level<7) {
+                    if (CS.Assist_Level<7) {
                       setState(() {
-                        Assist_Level++;
-                        UART_characteristic.write(
-                            utf8.encode(Assist_Level.toString()));
+                        CS.Assist_Level++;
+                        UART_characteristic.write(prepare_Ant_Message(16,CS));
                       });
                     }
                     },
@@ -557,6 +555,41 @@ class _MyHomePageState extends State<MyHomePage> {
         });
         break;
     }
+  }
+
+  void initCS(){
+
+    CS.Temperature_State = 0;
+    CS.Travel_Mode_State= 0;
+    CS.System_State= 0;
+    CS.Gear_State= 0;
+    CS.LEV_Error= 0;
+    CS.Speed= 0;
+    CS.Assist_Level = 3;
+    CS.Regen_Level = 3;
+
+    //page 2
+    CS.Odometer= 0;
+    CS.Remaining_range= 0;
+
+    //page 3
+    CS.Battery_SOC= 0;
+    CS.Percentage_Assist= 0;
+
+    //page 4
+    CS.Charging_Cycle= 0;
+    CS.Fuel_Consuption= 0;
+    CS.Battery_Voltage= 0;
+    CS.Distance_On_Recent_Charge= 0;
+
+    //page 5
+    CS.Travel_Modes_Supported= 0;
+    CS.Wheel_Circumference= 0;
+
+    //page 16
+
+    CS.Display_Command= 0;
+    CS.Manufacturer_ID= 0;
   }
 
   ListView _WelcomeScreen () {
