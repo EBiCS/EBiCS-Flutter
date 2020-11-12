@@ -77,4 +77,34 @@ State.Travel_Mode_State = State.Regen_Level|State.Assist_Level<<3;
 }
 
 
+controllerState processRxAnt(List RxAnt, controllerState State){
 
+ int chkSum = 0;
+ int page = RxAnt[3];
+ for (var i = 0; i < 11; i++) {
+  chkSum ^= RxAnt[i];
+ }
+ if(chkSum==RxAnt[11]) {
+  switch (page) {
+   case 1:
+    {
+      State.Temperature_State=RxAnt[4];
+      State.Travel_Mode_State=RxAnt[5];
+      State.System_State=RxAnt[6];
+      State.Gear_State=RxAnt[7];
+      State.LEV_Error=RxAnt[8];
+      State.Speed=RxAnt[10]<<8|RxAnt[9];
+      State.Assist_Level = State.Travel_Mode_State>>3 & 0x07;
+      State.Regen_Level = State.Travel_Mode_State & 0x07;
+    }
+    break;
+   default:
+    {
+
+    }
+  }
+ }
+
+
+ return (State);
+}

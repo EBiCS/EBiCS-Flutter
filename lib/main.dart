@@ -130,11 +130,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
               setState(() {
                 widget.readValues[characteristic.uuid] = value;
-                Speed_value = value[0];
+                CS = processRxAnt(value , CS);
+                //Speed_value = value[0];
                 Trip_value = value[1];
                 Voltage_value = value[2];
                 Power_value = value[3];
-                CS.Speed = value[4];;
 
               });
             });
@@ -368,7 +368,7 @@ class _MyHomePageState extends State<MyHomePage> {
     containers.add(
         Container(
           height: 300,
-          child: MyGauge(Speed_value.toDouble())
+          child: MyGauge(CS.Speed.toDouble()/10)
           ,
         ));
 
@@ -446,6 +446,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         CS.Regen_Level++;
                         print('Button Level Up');
                         UART_characteristic.write(prepare_Ant_Message(16,CS));
+                        //UART_characteristic.write(utf8.encode('12345678901234567890123456789'));
                       });
                     }
                     },
@@ -564,7 +565,7 @@ class _MyHomePageState extends State<MyHomePage> {
     CS.System_State= 0;
     CS.Gear_State= 0;
     CS.LEV_Error= 0;
-    CS.Speed= 0;
+    CS.Speed= 1;
     CS.Assist_Level = 3;
     CS.Regen_Level = 3;
 
