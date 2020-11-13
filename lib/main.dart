@@ -99,10 +99,11 @@ class _MyHomePageState extends State<MyHomePage> {
       jsonFile = new File(dir.path + "/" + fileName);
       fileExists = jsonFile.existsSync();
       print('jasonFile File existiert: '+ fileExists.toString());
+      //loadParams();
       if (fileExists){
         this.setState(() => fileContent = Map.castFrom(json.decode(jsonFile.readAsStringSync())));
-        print('jasonFile Inhalt: '+ fileContent['Speed'].toString());
-        Trip_value = fileContent['Speed'];
+        print('jasonFile Inhalt: '+ fileContent.toString());
+        Trip_value = fileContent['trip'];
       }
       else{
       jsonFile.createSync();
