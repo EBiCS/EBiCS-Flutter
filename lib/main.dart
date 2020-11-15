@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:EBiCS/localParams.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
@@ -10,6 +11,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import 'LEV_Pages.dart';
+import 'localParams.dart';
 
 
 
@@ -63,20 +65,21 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothService UART_service;
   BluetoothCharacteristic UART_characteristic;
   controllerState CS = new controllerState(0);
+  localParams LP = new localParams(0);
 
   File jsonFile;
   Directory dir;
   String fileName = "myJSONFile.json";
   bool fileExists = false;
-  Map<String, dynamic> fileContent;
+  Map<String, dynamic> mapJSON;
 
   Future loadParams()async{
 
     jsonFile.writeAsStringSync(await rootBundle.loadString("assets/params.json"));
 
     setState(() {
-
-
+      mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync()));
+      print('jasonFile Inhalt nach neu schreiben: '+ mapJSON.toString());
     });
 
   }
@@ -94,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    //get JSON file and set runtime values
     getApplicationDocumentsDirectory().then((Directory directory) {
       dir = directory;
       jsonFile = new File(dir.path + "/" + fileName);
@@ -101,32 +105,22 @@ class _MyHomePageState extends State<MyHomePage> {
       print('jasonFile File existiert: '+ fileExists.toString());
       //loadParams();
       if (fileExists){
-        this.setState(() => fileContent = Map.castFrom(json.decode(jsonFile.readAsStringSync())));
-        print('jasonFile Inhalt: '+ fileContent.toString());
-        Trip_value = fileContent['trip'];
+        this.setState(() => mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync())));
+        print('jasonFile Inhalt: '+ mapJSON.toString());
+        initCS();
+        assignJSON_CS(mapJSON, CS);
+        assignJSON_LP(mapJSON, LP);
+
       }
       else{
       jsonFile.createSync();
       fileExists = jsonFile.existsSync();
       loadParams();
-      this.setState(() => fileContent = json.decode(jsonFile.readAsStringSync()));
+      this.setState(() => mapJSON = json.decode(jsonFile.readAsStringSync()));
       }
     });
-    /*getApplicationDocumentsDirectory().then((Directory directory) {
-      dir = directory;
-      jsonFile = new File(dir.path + "/" + fileName);
-    });
-    print('jasonFile File angelegt: '+ jsonFile.toString());
-    fileExists = jsonFile.existsSync();
 
-    if (fileExists) this.setState(() => fileContent = json.decode(jsonFile.readAsStringSync()));
-    else{
-      jsonFile.createSync();
-      loadParams();
-      this.setState(() => fileContent = json.decode(jsonFile.readAsStringSync()));
-    }*/
 
-    initCS();
 
     widget.flutterBlue.connectedDevices
         .asStream()

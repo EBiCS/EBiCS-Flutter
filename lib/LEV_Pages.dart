@@ -30,6 +30,10 @@ class controllerState {
  int Travel_Modes_Supported= 0;
  int Wheel_Circumference= 0;
 
+ //page 6, no LEV standard, self-defined
+ int throttleMax = 3200;
+ int throttleOffset = 800;
+
  //page 16
 
  int Display_Command= 0;
@@ -105,6 +109,13 @@ controllerState processRxAnt(List RxAnt, controllerState State){
   }
  }
 
+
+ return (State);
+}
+
+controllerState assignJSON_CS(Map<String, dynamic> mapJSON, controllerState State){
+  State.throttleMax = mapJSON['throttleMax'];
+  State.throttleOffset = mapJSON['throttleMax'];
 
  return (State);
 }
