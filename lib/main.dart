@@ -108,6 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
         this.setState(() => mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync())));
         print('jasonFile Inhalt: '+ mapJSON.toString());
         initCS();
+        initLP();
         assignJSON_CS(mapJSON, CS);
         assignJSON_LP(mapJSON, LP);
 
@@ -435,7 +436,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
             child: Row(
               children: <Widget>[
-                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Trip_value.toString() + " km"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: LP.trip.toString() + " km"),
                 MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Voltage_value.toString() + " V"),
                 MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Power_value.toString() + " W"),
               ],
@@ -602,6 +603,11 @@ class _MyHomePageState extends State<MyHomePage> {
         });
         break;
     }
+  }
+
+  void initLP(){
+    LP.trip=111;
+    LP.deviceName= "EBiCS";
   }
 
   void initCS(){
