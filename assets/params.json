@@ -2,5 +2,7 @@
   "trip":128,
   "throttleMax":3200,
   "throttleOffset":800,
-  "deviceName": "deviceName"
+  "deviceName": "deviceName",
+  "regenLevel": 7,
+  "assistLevel": 1
 }

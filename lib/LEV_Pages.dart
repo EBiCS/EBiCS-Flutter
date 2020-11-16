@@ -116,6 +116,17 @@ controllerState processRxAnt(List RxAnt, controllerState State){
 controllerState assignJSON_CS(Map<String, dynamic> mapJSON, controllerState State){
   State.throttleMax = mapJSON['throttleMax'];
   State.throttleOffset = mapJSON['throttleMax'];
+  State.Assist_Level = mapJSON['assistLevel'];
+  State.Regen_Level = mapJSON['regenLevel'];
 
  return (State);
+}
+
+Map<String, dynamic> assignMap_CS(Map<String, dynamic> mapJSON, controllerState State){
+ mapJSON['throttleMax'] = State.throttleMax;
+ mapJSON['throttleMax'] = State.throttleOffset;
+ mapJSON['assistLevel'] = State.Assist_Level;
+ mapJSON['regenLevel'] = State.Regen_Level;
+
+ return (mapJSON);
 }

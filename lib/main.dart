@@ -36,6 +36,7 @@ class MyHomePage extends StatefulWidget {
   final FlutterBlue flutterBlue = FlutterBlue.instance;
   final List<BluetoothDevice> devicesList = new List<BluetoothDevice>();
   final Map<Guid, List<int>> readValues = new Map<Guid, List<int>>();
+  Map<String, dynamic> mapJSON = Map<String, dynamic>();
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -71,20 +72,31 @@ class _MyHomePageState extends State<MyHomePage> {
   Directory dir;
   String fileName = "myJSONFile.json";
   bool fileExists = false;
-  Map<String, dynamic> mapJSON;
+  Timer timer;
+
 
   Future loadParams()async{
 
     jsonFile.writeAsStringSync(await rootBundle.loadString("assets/params.json"));
 
     setState(() {
-      mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync()));
-      print('jasonFile Inhalt nach neu schreiben: '+ mapJSON.toString());
+      widget.mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync()));
+      print('jasonFile Inhalt nach loadParams: '+ widget.mapJSON.toString());
     });
 
   }
 
+ safeParams(){
+    assignMap_LP(widget.mapJSON, LP);
+    assignMap_CS(widget.mapJSON, CS);
+    jsonFile.writeAsStringSync(json.encode(widget.mapJSON));
 
+    setState(() {
+      widget.mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync()));
+      print('jasonFile Inhalt nach safeParams: '+ widget.mapJSON.toString());
+    });
+
+  }
 
   _addDeviceTolist(final BluetoothDevice device) {
     if (!widget.devicesList.contains(device)) {
@@ -97,31 +109,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    //get JSON file and set runtime values
-    getApplicationDocumentsDirectory().then((Directory directory) {
-      dir = directory;
-      jsonFile = new File(dir.path + "/" + fileName);
-      fileExists = jsonFile.existsSync();
-      print('jasonFile File existiert: '+ fileExists.toString());
-      //loadParams();
-      if (fileExists){
-        this.setState(() => mapJSON = Map.castFrom(json.decode(jsonFile.readAsStringSync())));
-        print('jasonFile Inhalt: '+ mapJSON.toString());
-        initCS();
-        initLP();
-        assignJSON_CS(mapJSON, CS);
-        assignJSON_LP(mapJSON, LP);
 
-      }
-      else{
-      jsonFile.createSync();
-      fileExists = jsonFile.existsSync();
-      loadParams();
-      this.setState(() => mapJSON = json.decode(jsonFile.readAsStringSync()));
-      }
+    timer = new Timer.periodic(new Duration(seconds: 1), (Timer timer) async {
+
+      this.setState(() {
+        Power_value++;
+      });
     });
-
-
+    initCS();
+    initLP();
+    processJSON();
 
     widget.flutterBlue.connectedDevices
         .asStream()
@@ -141,6 +138,35 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     widget.flutterBlue.startScan();
   }
+
+ processJSON() async {
+    final Directory extDir = await getApplicationDocumentsDirectory();
+    jsonFile = new File(extDir.path + "/" + fileName);
+    fileExists = jsonFile.existsSync();
+    print('jasonFile File existiert: '+ fileExists.toString());
+
+    if (fileExists){
+
+      this.setState(() {
+        widget.mapJSON = json.decode(jsonFile.readAsStringSync());
+        print('jasonFile Inhalt: ' + widget.mapJSON.toString());
+        //loadParams();
+        assignJSON_CS(widget.mapJSON, CS);
+        assignJSON_LP(widget.mapJSON, LP);
+      }
+      );
+    }
+    else{
+      jsonFile.createSync();
+      fileExists = jsonFile.existsSync();
+      loadParams();
+      this.setState(() {
+        widget.mapJSON = json.decode(jsonFile.readAsStringSync());
+          }
+          );
+    }
+  }
+
   connectToDevice() async {
 
     widget.flutterBlue.stopScan();
@@ -216,6 +242,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onPressed: () async {
+                  LP.deviceName = device.name.toString();
                   widget.flutterBlue.stopScan();
                   try {
                     await device.connect();
@@ -253,6 +280,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       viewNumber = 1;
                     });
 
+                  }
+              ),
+              FlatButton(
+                  color: Colors.blue,
+                  child: Text(
+                    'Save Settings',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: () {
+                    safeParams();
                   }
               ),
 
@@ -602,6 +639,11 @@ class _MyHomePageState extends State<MyHomePage> {
           viewNumber = 0;
         });
         break;
+      case 'Set Parameters':
+        setState(() {
+          viewNumber = 3;
+        });
+        break;
     }
   }
 
@@ -669,6 +711,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 
+  ListView _paramSetting () {
+    List<Container> containers = new List<Container>();
+    containers.add(
+    Container(
+        height: 200,
+        child: new Center(
+
+          child: new Column(
+            children: <Widget>[
+              new Text('Parameters', style: new TextStyle(fontWeight: FontWeight.bold),),
+
+              /*Listview diplay rows for different widgets,
+                Listview.builder automatically builds its child widgets with a
+                template and a list*/
+
+              new Expanded(child: new ListView.builder(
+                itemCount: widget.mapJSON.length,
+                itemBuilder: (BuildContext context, int index){
+                  String key = widget.mapJSON.keys.elementAt(index);
+                  return new Row(
+                    children: <Widget>[
+                      Text('${key} : '),
+                      Text(widget.mapJSON[key].toString())
+                      ],
+                  );
+                },
+
+              ))
+
+            ],
+          ),
+        )
+    )
+    );
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: <Widget>[
+        ...containers,
+      ],
+    );
+
+  }
+
 
   ListView _buildView() {
     /*if (_connectedDevice != null) {
@@ -688,6 +773,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
       case 2: {
         return _WelcomeScreen();
+      }
+      break;
+
+      case 3: {
+        return _paramSetting();
       }
       break;
     }
@@ -733,7 +823,7 @@ class _MyHomePageState extends State<MyHomePage> {
         PopupMenuButton<String>(
           onSelected: handleClick,
           itemBuilder: (BuildContext context) {
-            return {'Main View', 'Connect Device'}.map((String choice) {
+            return {'Main View', 'Connect Device', 'Set Parameters'}.map((String choice) {
               return PopupMenuItem<String>(
                 value: choice,
                 child: Text(choice),
