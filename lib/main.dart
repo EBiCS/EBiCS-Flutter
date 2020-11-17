@@ -267,6 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               FlatButton(
                   color: Colors.blue,
@@ -712,39 +713,72 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   ListView _paramSetting () {
+
     List<Container> containers = new List<Container>();
-    containers.add(
-    Container(
-        height: 200,
-        child: new Center(
-
-          child: new Column(
+    widget.mapJSON.forEach((key, value) {
+      containers.add(
+        Container(
+          height: 100,
+          child: Row(
             children: <Widget>[
-              new Text('Parameters', style: new TextStyle(fontWeight: FontWeight.bold),),
-
-              /*Listview diplay rows for different widgets,
-                Listview.builder automatically builds its child widgets with a
-                template and a list*/
-
-              new Expanded(child: new ListView.builder(
-                itemCount: widget.mapJSON.length,
-                itemBuilder: (BuildContext context, int index){
-                  String key = widget.mapJSON.keys.elementAt(index);
-                  return new Row(
-                    children: <Widget>[
-                      Text('${key} : '),
-                      Text(widget.mapJSON[key].toString())
-                      ],
-                  );
-                },
-
-              ))
-
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text('${key}'),
+                    Text('${value}'),
+                    RaisedButton(
+                      child: Text('Set', style: TextStyle(color: Colors.white)),
+                      onPressed: () async {
+                        _writeController.text = '${value}';
+                        await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text("Set parameter"),
+                                content: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _writeController,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("Set"),
+                                    onPressed: () {
+                                      setState(() {
+                                      if(int.tryParse(_writeController.value.text)!=null){ widget.mapJSON[key] = int.parse(_writeController.value.text);}
+                                      else { widget.mapJSON[key] = _writeController.value.text;}
+                                      });
+                                      jsonFile.writeAsStringSync(json.encode(widget.mapJSON));
+                                      Navigator.pop(context);
+                                      print('mapJSON: '+ key + ' ' + widget.mapJSON[key].toString());
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text("Cancel"),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
+                              );
+                            });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        )
-    )
-    );
+        ),
+      );
+
+    });
+
     return ListView(
       padding: const EdgeInsets.all(8),
       children: <Widget>[
