@@ -718,7 +718,8 @@ class _MyHomePageState extends State<MyHomePage> {
     widget.mapJSON.forEach((key, value) {
       containers.add(
         Container(
-          height: 100,
+          height: 25,
+          padding: EdgeInsets.all(3.0),
           child: Row(
             children: <Widget>[
               Expanded(
@@ -728,7 +729,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     Text('${key}'),
                     Text('${value}'),
                     RaisedButton(
-                      child: Text('Set', style: TextStyle(color: Colors.white)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                          side: BorderSide(color: Colors.red),
+                      ),
+                      child: Text('Set', style: TextStyle(color: Colors.white) ),
                       onPressed: () async {
                         _writeController.text = '${value}';
                         await showDialog(
@@ -778,6 +783,28 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 
     });
+    containers.add(
+        Container(
+          height: 50,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+
+              FlatButton(
+                  color: Colors.blue,
+                  child: Text(
+                    'Run autodetect routine',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: () {
+                      CS.autoDetect=1;
+                      UART_characteristic.write(prepare_Ant_Message(6,CS));
+                      CS.autoDetect=0;
+                    })
+
+            ],
+          ),
+        ));
 
     return ListView(
       padding: const EdgeInsets.all(8),

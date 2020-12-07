@@ -33,6 +33,7 @@ class controllerState {
  //page 6, no LEV standard, self-defined
  int throttleMax = 3200;
  int throttleOffset = 800;
+ int autoDetect = 0;
 
  //page 16
 
@@ -55,6 +56,17 @@ State.Travel_Mode_State = State.Regen_Level|State.Assist_Level<<3;
  message[3] = Page;
 
  switch (Page) {
+  case 6:
+   {
+    message[4] = State.autoDetect; //Indicator for Autodetect procedere
+    message[5] = State.throttleMax & 0xFF; //Low Byte
+    message[6] = State.throttleMax>> 8 & 0xFF; // HiByte
+    message[7] = State.throttleOffset & 0xFF; //Low Byte
+    message[8] = State.throttleOffset>> 8 & 0xFF; // HiByte
+    message[9] = State.Manufacturer_ID & 0xFF; //Low Byte
+    message[10] = State.Manufacturer_ID >> 8 & 0xFF; //Hi Byte
+   }
+   break;
   case 16:
    {
     message[4] = State.Wheel_Circumference & 0xFF; //Low Byte
@@ -115,7 +127,7 @@ controllerState processRxAnt(List RxAnt, controllerState State){
 
 controllerState assignJSON_CS(Map<String, dynamic> mapJSON, controllerState State){
   State.throttleMax = mapJSON['throttleMax'];
-  State.throttleOffset = mapJSON['throttleMax'];
+  State.throttleOffset = mapJSON['throttleOffset'];
   State.Assist_Level = mapJSON['assistLevel'];
   State.Regen_Level = mapJSON['regenLevel'];
 
@@ -124,7 +136,7 @@ controllerState assignJSON_CS(Map<String, dynamic> mapJSON, controllerState Stat
 
 Map<String, dynamic> assignMap_CS(Map<String, dynamic> mapJSON, controllerState State){
  mapJSON['throttleMax'] = State.throttleMax;
- mapJSON['throttleMax'] = State.throttleOffset;
+ mapJSON['throttleOffset'] = State.throttleOffset;
  mapJSON['assistLevel'] = State.Assist_Level;
  mapJSON['regenLevel'] = State.Regen_Level;
 
