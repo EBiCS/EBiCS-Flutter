@@ -1,7 +1,7 @@
 
 
 class localParams {
-  int trip;
+  double trip;
   String deviceName;
   int LP_Error;
   localParams(this.LP_Error);
@@ -9,7 +9,7 @@ class localParams {
 
 localParams assignJSON_LP(Map<String, dynamic> mapJSON, localParams LP){
   LP.deviceName = mapJSON['deviceName'];
-  LP.trip = mapJSON['trip'];
+  LP.trip = double.parse(mapJSON['trip']);
 
   return (LP);
 }

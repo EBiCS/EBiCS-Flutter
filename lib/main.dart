@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
     timer = new Timer.periodic(new Duration(seconds: 1), (Timer timer) async {
 
       this.setState(() {
-        Power_value++;
+        LP.trip += CS.Speed.toDouble()/360; //sum up distance from speed
       });
     });
     initCS();
@@ -151,8 +151,10 @@ class _MyHomePageState extends State<MyHomePage> {
         widget.mapJSON = json.decode(jsonFile.readAsStringSync());
         print('jasonFile Inhalt: ' + widget.mapJSON.toString());
         //loadParams();
+        setState(() {
         assignJSON_CS(widget.mapJSON, CS);
         assignJSON_LP(widget.mapJSON, LP);
+        });
       }
       );
     }
@@ -204,11 +206,6 @@ class _MyHomePageState extends State<MyHomePage> {
               setState(() {
                 widget.readValues[characteristic.uuid] = value;
                 CS = processRxAnt(value , CS);
-                //Speed_value = value[0];
-                Trip_value = value[1];
-                Voltage_value = value[2];
-                Power_value = value[3];
-
               });
             });
           }
@@ -474,7 +471,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
             child: Row(
               children: <Widget>[
-                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: LP.trip.toString() + " km"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: LP.trip.toStringAsFixed(1) + " km"),
                 MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Voltage_value.toString() + " V"),
                 MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Power_value.toString() + " W"),
               ],
@@ -649,7 +646,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void initLP(){
-    LP.trip=111;
+    LP.trip=000;
     LP.deviceName= "EBiCS";
   }
 
@@ -759,6 +756,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                       else { widget.mapJSON[key] = _writeController.value.text;}
                                       });
                                       jsonFile.writeAsStringSync(json.encode(widget.mapJSON));
+                                      assignJSON_CS(widget.mapJSON, CS);
+                                      assignJSON_LP(widget.mapJSON, LP);
                                       Navigator.pop(context);
                                       print('mapJSON: '+ key + ' ' + widget.mapJSON[key].toString());
                                     },
