@@ -42,7 +42,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final _writeController = TextEditingController();
   final String SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb";
   final String CHARACTERISTIC_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
@@ -109,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     timer = new Timer.periodic(new Duration(seconds: 1), (Timer timer) async {
 
       this.setState(() {
@@ -137,6 +137,25 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
     widget.flutterBlue.startScan();
+  }
+
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      switch(state) {
+        case AppLifecycleState.resumed:
+          safeParams();
+          print('App-Status '+ state.toString());
+          break;
+        case AppLifecycleState.inactive:
+          safeParams();
+          print('App-Status '+ state.toString());
+          break;
+        case AppLifecycleState.paused:
+          safeParams();
+          print('App-Status '+ state.toString());
+          break;
+      }
+    });
   }
 
  processJSON() async {

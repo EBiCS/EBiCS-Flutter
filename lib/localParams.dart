@@ -16,7 +16,7 @@ localParams assignJSON_LP(Map<String, dynamic> mapJSON, localParams LP){
 
 Map<String, dynamic> assignMap_LP(Map<String, dynamic> mapJSON, localParams LP){
   mapJSON['deviceName'] = LP.deviceName;
-  mapJSON['trip'] = LP.trip;
+  mapJSON['trip'] = LP.trip.toStringAsFixed(1);
 
 return (mapJSON);
 }
