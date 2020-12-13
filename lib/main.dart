@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     timer = new Timer.periodic(new Duration(seconds: 1), (Timer timer) async {
 
       this.setState(() {
-        LP.trip += CS.Speed.toDouble()/360; //sum up distance from speed
+        LP.trip += CS.Speed.toDouble()/36000; //sum up distance from speed
       });
     });
     initCS();
@@ -491,8 +491,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
             child: Row(
               children: <Widget>[
                 MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: LP.trip.toStringAsFixed(1) + " km"),
-                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Voltage_value.toString() + " V"),
-                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: Power_value.toString() + " W"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: (CS.Battery_Voltage/4).toStringAsFixed(1) + " V"),
+                MyBox(mediumBlue, height: 30, fontColor: Colors.white, text: (CS.Fuel_Consumption/100*CS.Battery_Voltage/4).toStringAsFixed(0) + " W"),
               ],
             )
 
@@ -690,7 +690,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
     //page 4
     CS.Charging_Cycle= 0;
-    CS.Fuel_Consuption= 0;
+    CS.Fuel_Consumption= 0;
     CS.Battery_Voltage= 0;
     CS.Distance_On_Recent_Charge= 0;
 

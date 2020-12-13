@@ -22,7 +22,7 @@ class controllerState {
 
  //page 4
  int Charging_Cycle= 0;
- int Fuel_Consuption= 0;
+ int Fuel_Consumption= 0; //12 bit value used for battery amps, scaling: amps*100
  int Battery_Voltage= 0;
  int Distance_On_Recent_Charge= 0;
 
@@ -112,6 +112,14 @@ controllerState processRxAnt(List RxAnt, controllerState State){
       State.Speed=RxAnt[10]<<8|RxAnt[9];
       State.Assist_Level = State.Travel_Mode_State>>3 & 0x07;
       State.Regen_Level = State.Travel_Mode_State & 0x07;
+    }
+    break;
+   case 4:
+    {
+     State.Charging_Cycle=(RxAnt[6]&0x07)<<8|RxAnt[5];
+     State.Fuel_Consumption=(RxAnt[6]>>4)<<8|RxAnt[7];
+     State.Battery_Voltage=RxAnt[8];
+     State.Distance_On_Recent_Charge = RxAnt[10]>>4|RxAnt[9];
     }
     break;
    default:
